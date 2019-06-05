@@ -1,0 +1,1 @@
+discord_bot_token = '' # https://discordapp.com/developers/applications/<BOT ID>/bots
