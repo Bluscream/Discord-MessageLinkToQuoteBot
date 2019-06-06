@@ -1,5 +1,5 @@
 import discord, re
-from config import discord_bot_token
+from config import discord_bot_token, admins
 
 regex_discordid = re.compile(r"(\d{16,21})")
 regex_messagelink = r"(https:\/\/(?:\S+.)?discordapp.com\/channels\/(\d{16,21})\/(\d{16,21})\/(\d{16,21}))"
@@ -16,6 +16,7 @@ class MyClient(discord.Client):
         self.own_prefix = self.own_prefix.format(self.user.id)
     async def on_message(self, message: discord.Message):
         if message.author == self.user: return
+        if message.author.bot: return
         if message.content.startswith(self.own_prefix):
             command = message.content.split(" ")[1:]
             origin = "#" + message.channel.name if message.guild is None else ("{}:#{}".format(message.guild.name, message.channel.name))
@@ -23,7 +24,7 @@ class MyClient(discord.Client):
             if command[0] == "invite": await message.channel.send(content=f"{message.author.mention} Invite me to your server: <https://discordapp.com/api/oauth2/authorize?client_id=585621762650406952&permissions=93184&scope=bot>")
             return
         if message.guild is None: return
-        if message.guild.id == 336642139381301249 and message.channel.id != 448285120634421278: return
+        # if message.guild.id == 336642139381301249 and message.channel.id != 448285120634421278: return
         if not message.guild.me.permissions_in(message.channel).embed_links: return
         if message.content.isdigit():
             if not regex_discordid.match(message.content): return
@@ -54,8 +55,9 @@ class MyClient(discord.Client):
                 if msg is None: print("ERROR: Could not find message!"); return
             except: print("FATAL: Could not find message!"); return
             # msg = await self.get_guild(url.Guild).get_channel(url.Channel).fetch_message(url.Message)
-            if len(msg.embeds) > 0: print("ERROR: Message is embed!"); return
-            if msg.author.bot: print("ERROR: Message author is bot!"); return
+            if not message.author.id in admins:
+                if len(msg.embeds) > 0: print("ERROR: Message is embed!"); return
+                if msg.author.bot: print("ERROR: Message author is bot!"); return
             can_delete = message.guild.me.permissions_in(message.channel).manage_messages
             if can_delete: await message.delete()
             em = discord.Embed()
